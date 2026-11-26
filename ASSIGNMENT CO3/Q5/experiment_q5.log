@@ -1,0 +1,23 @@
+PS C:\CN_CSA0715\ASSIGNMENT CO3\Q5> python q5_mm1_qos.py
+load  500 pkt/s: rho 0.50  L    1.0 pkts  W    2.0 ms
+load  800 pkt/s: rho 0.80  L    4.0 pkts  W    5.0 ms
+load  900 pkt/s: rho 0.90  L    9.0 pkts  W   10.0 ms
+load  950 pkt/s: rho 0.95  L   19.0 pkts  W   20.0 ms
+load  990 pkt/s: rho 0.99  L   99.0 pkts  W  100.0 ms
+load 1000 pkt/s: unstable, queue grows without limit
+
+--- Follow-up Calculations ---
+  - Delay first exceeds 20 ms when 1/(1000 - lam) > 0.020 => lam > 950 pkt/s (at 950 pkt/s, W = 20.0 ms).
+  - Doubling 450 -> 900 pkt/s: W goes 1.82 ms -> 10.00 ms (~5.5x; at 900, 1-rho drops 5.5x -> ~10x!).
+  - Link capacity for W < 10 ms at lam = 1,500 pkt/s: mu > 1500 + 1/0.010 = 1,600 pkt/s.
+  - Token bucket (1 MB = 8 Mb, r=2 Mbps, R=10 Mbps): burst duration T = 8 / (10 - 2) = 1.00 s
+  - DiffServ classes: Video Call -> EF (DSCP 46) | Backup -> Best Effort / Scavenger (CS1/BE) | Interactive Web -> AF21.
+
+--- FIFO vs Strict-Priority Queue Simulation (95% total load: 200 video + 750 backup) ---
+  FIFO Video Delay     : avg = 14.30 ms, max =  58.28 ms
+  Priority Video Delay : avg =  2.21 ms, max =  10.35 ms
+
+--- Alternative Concept Analysis: Double Link (2,000 pkt/s) vs Strict Priority ---
+  - Double link (mu=2000, lam=1800): W = 5.00 ms (still degrades if backup bursts > 2000 pkt/s!)
+  - Strict priority (DiffServ EF) on 1000 pkt/s link: video avg delay = 2.21 ms -> QoS wins cleanly!
+Saved M/M/1 delay plot: C:\Users\19252\.gemini\antigravity\scratch\CN_CSA0715\ASSIGNMENT CO3\Q5\q5_mm1_delay.png

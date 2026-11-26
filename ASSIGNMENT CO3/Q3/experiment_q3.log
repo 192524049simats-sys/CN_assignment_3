@@ -1,0 +1,29 @@
+PS C:\CN_CSA0715\ASSIGNMENT CO3\Q3> python q3_http_performance.py
+=== CO3 Q3: HTTP PERFORMANCE — WHY THE HOME PAGE TAKES 8 SECONDS ===
+Given: 1 HTML + 80 small objects | RTT = 50 ms | Transmission time ~ 0
+  1. Non-persistent HTTP (serial)          :  8100 ms (8.10 s) [162 RTTs]
+  2. Persistent HTTP/1.1 (no pipelining)   :  4100 ms (4.10 s) [ 82 RTTs]
+  3. Persistent HTTP/1.1 (with pipelining) :   150 ms (0.15 s) [  3 RTTs]
+  4. 6 parallel non-persistent connections :  1500 ms (1.50 s) [ 30 RTTs]
+
+HTTP/2 vs HTTP/3 (QUIC) under Packet Loss:
+  - HTTP/2 multiplexes all 80 streams over ONE TCP connection -> 1 lost TCP segment stalls ALL streams (TCP HoL blocking).
+  - HTTP/3 runs over QUIC (UDP) with independent streams -> losing a packet stalls ONLY that stream.
+
+Caching Headers for Faster Second Visit:
+  - Cache-Control: public, max-age=86400 -> eliminates network RTTs (0 ms fetch from browser cache).
+  - ETag / If-None-Match -> conditional 304 Not Modified skips payload transfer (~1 RTT validation).
+
+--- Live HTTP/HTTPS Measurement via curl.exe ---
+  https://example.com/ | proto=1.1 | conns=1 | dns=0.087193s | tcp=0.048680s | tls=0.270442s | ttfb=0.322429s | total=0.322733s
+  https://www.google.com/ | proto=1.1 | conns=1 | dns=0.062730s | tcp=0.062775s | tls=0.246019s | ttfb=0.324282s | total=0.348718s
+  https://www.cloudflare.com/ | proto=1.1 | conns=1 | dns=0.052380s | tcp=0.052419s | tls=0.133763s | ttfb=0.419055s | total=0.491212s
+
+--- Engineering Decision: Top 3 Mobile Load-Time Optimisations ---
+  1. HTTP/3 (QUIC) + Persistent Multiplexing : Cuts 8.1 s -> ~0.15 s (98% reduction, eliminates TCP HoL & 0/1-RTT setup).
+  2. Aggressive Cache-Control + ETag         : Cuts repeat visits to ~0 ms (local cache hit).
+  3. Asset Bundling + Compression (Brotli)   : Reduces 80 requests -> 8 bundles, slashing RTT overhead on high-RTT 4G.
+
+--- Alternative Concept Analysis: Bundling 80 Objects into 8 Bundles ---
+  - Non-persistent (8 bundles): 900 ms (down from 8,100 ms)
+  - Persistent 1.1 (8 bundles): 500 ms (down from 4,100 ms, vs ~150 ms with HTTP/2 multiplexing)

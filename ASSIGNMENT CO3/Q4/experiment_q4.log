@@ -1,0 +1,26 @@
+PS C:\CN_CSA0715\ASSIGNMENT CO3\Q4> python q4_dns_resolution.py
+results.simats.ac.in.    10.20.30.40     queries sent: 4
+www.example.com.         93.184.216.34   queries sent: 3
+results.simats.ac.in.    10.20.30.40     queries sent: 0
+
+--- Why 3rd Lookup Sends 0 Queries + TTL Cache Extension ---
+  - 'results.simats.ac.in.' was cached on lookup 1 -> cache hit returns IP locally (0 queries).
+  t=  0s -> 10.20.30.40, queries=4 (EXPIRED/MISS)
+  t=100s -> 10.20.30.40, queries=0 (CACHE HIT)
+  t=305s -> 10.20.30.40, queries=4 (EXPIRED/MISS)
+
+--- Result-Day DNS Load Calculation (150,000 students, 40 cities/resolvers) ---
+  - TTL = 300 s -> 12 queries/hr per resolver x 40 resolvers = 480 queries/hr total!
+  - TTL =  30 s -> 120 queries/hr per resolver x 40 resolvers = 4800 queries/hr total!
+  - Risk of very long TTL (e.g. 24h): Moving result server mid-day leaves stale IPs cached for hours.
+  - Recommended Result-Day TTL: 300 s (5 min) pre-event, lowered to 60 s only during planned cutover.
+
+--- Live Windows DNS Resolution Test (Public Resolvers & NXDOMAIN) ---
+  Resolver Cloudflare check note: Command '['powershell', '-NoProfile', '-Command', 'Resolve-DnsName results.simats.ac.in -Server 1.1.1.1 -DnsOnly -ErrorAction SilentlyContinue | Out-Null']' returned non-zero exit status 1.
+  Resolver Google check note: Command '['powershell', '-NoProfile', '-Command', 'Resolve-DnsName results.simats.ac.in -Server 8.8.8.8 -DnsOnly -ErrorAction SilentlyContinue | Out-Null']' returned non-zero exit status 1.
+  Resolver Quad9 check note: Command '['powershell', '-NoProfile', '-Command', 'Resolve-DnsName results.simats.ac.in -Server 9.9.9.9 -DnsOnly -ErrorAction SilentlyContinue | Out-Null']' returned non-zero exit status 1.
+  NXDOMAIN check: Query returned DNS name does not exist (RCODE=3 NXDOMAIN).
+
+--- Alternative Concept Analysis: CDN Anycast DNS ---
+  - CDN Anycast absorbs all 40+ ISP resolver queries at the nearest edge PoP (~10-20 ms RTT);
+  - Origin authoritative server sees near-zero direct traffic (only periodic zone transfers/edge refreshes).

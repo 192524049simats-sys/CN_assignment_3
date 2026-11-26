@@ -1,0 +1,40 @@
+PS C:\CN_CSA0715\ASSIGNMENT CO3\Q1> python q1_sockets_demux.py
+UDP lab1 -> ACK:lab1
+UDP lab2 -> ACK:lab2
+UDP lab3 -> ACK:lab3
+TCP server received 100000 bytes in order
+
+--- Socket Demultiplexing (Sports-App Server 203.0.113.5) ---
+  1. TCP 49.37.2.8:50001 -> 443    => Socket: TCP 203.0.113.5:443 <-> 49.37.2.8:50001 (ESTABLISHED)
+  2. TCP 117.96.4.2:50000 -> 443   => Socket: TCP 203.0.113.5:443 <-> 117.96.4.2:50000 (ESTABLISHED)
+  3. TCP SYN 106.51.7.7:41000->443 => Socket: TCP 203.0.113.5:443 (LISTEN) -> spawns new conn socket
+  4. UDP 49.37.2.8:50000 -> 5004   => Socket: UDP 203.0.113.5:5004 (shared 2-tuple socket)
+  Why: TCP demultiplexes on 4-tuple (srcIP, srcPort, dstIP, dstPort); UDP demultiplexes on 2-tuple (dstIP, dstPort).
+
+--- Header Overhead (100-byte Score Update + 20B IPv4) ---
+  UDP + IPv4 : 8 + 20 = 28 B header / 128 B total = 21.88%
+  TCP + IPv4 : 20 + 20 = 40 B header / 140 B total = 28.57%
+
+--- Simulated Packet Loss Experiment (1%, 5%, 10% over 100 segments) ---
+  Loss  1%: UDP delivered  99/100 (gaps) | TCP delivered 100/100 in order (101 total transmissions)
+  Loss  5%: UDP delivered  97/100 (gaps) | TCP delivered 100/100 in order (104 total transmissions)
+  Loss 10%: UDP delivered  89/100 (gaps) | TCP delivered 100/100 in order (111 total transmissions)
+
+--- Alternative Concept: Live Video over TCP (2% loss, 60 ms RTT, 500 pkt/s) ---
+  Lost segments/sec : 10.0 -> 600 HoL stalls/minute, each freezing >= 60 ms (1 RTT)
+
+--- Open Sockets Sample (netstat -ano) ---
+  
+  Active Connections
+  
+    Proto  Local Address          Foreign Address        State           PID
+    TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1736
+    TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+    TCP    0.0.0.0:3306           0.0.0.0:0              LISTENING       6272
+    TCP    0.0.0.0:5040           0.0.0.0:0              LISTENING       8448
+    TCP    0.0.0.0:33060          0.0.0.0:0              LISTENING       6272
+    TCP    0.0.0.0:38001          0.0.0.0:0              LISTENING       30396
+    TCP    0.0.0.0:38004          0.0.0.0:0              LISTENING       5980
+    TCP    0.0.0.0:38005          0.0.0.0:0              LISTENING       27080
+    TCP    0.0.0.0:39002          0.0.0.0:0              LISTENING       30396
+    TCP    0.0.0.0:39004          0.0.0.0:0              LISTENING       5980
